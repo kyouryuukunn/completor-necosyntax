@@ -28,7 +28,7 @@ class Necosyntax(Completor):
         return candidates
 
     def parse(self, base):
-        if not self.ft or not base:
+        if not self.ft or not base or base.endswith((' ', '\t')):
             return []
 
         if self.ft not in _cache:
@@ -42,10 +42,8 @@ class Necosyntax(Completor):
                       if item['word'].startswith(token.encode('utf-8'))]
         logger.info(candidates)
 
-        index = token.rfind(base)
-        if index > 0:
-            prefix = len(token[:index])
-            for c in candidates:
-                c['abbr'] = c['word']
-                c['word'] = c['word'][prefix:]
+        offset = len(self.input_data) - len(token)
+        for c in candidates:
+            c['abbr'] = c['word']
+            c['offset'] = offset
         return candidates
