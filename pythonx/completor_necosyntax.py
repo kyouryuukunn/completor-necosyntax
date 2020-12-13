@@ -38,6 +38,8 @@ class Necosyntax(Completor):
                 _cache[self.ft] = []
 
         token = self.input_data.split()[-1]
+        if len(token) < self.get_option('min_chars'):
+            return []
         candidates = [dict(item) for item in _cache[self.ft]
                       if item['word'].startswith(token.encode('utf-8'))]
         logger.info(candidates)
