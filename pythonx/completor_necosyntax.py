@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from completor import Completor, vim
+from completor import Completor, vim, get_encoding
+from completor.compat import to_bytes, to_unicode
 
 _cache = {}
 
@@ -20,11 +21,11 @@ class Necosyntax(Completor):
     def _get_candidates(self):
         get_candidates = vim.Function('necosyntax#gather_candidates')
         candidates = [{
-            'word': word,
+            'abbr': word,
             'dup': 1,
             'menu': b'[S]'
         } for word in get_candidates()[:]]
-        candidates.sort(key=lambda x: x['word'])
+        candidates.sort(key=lambda x: x['abbr'])
         return candidates
 
     def parse(self, base):
@@ -37,15 +38,16 @@ class Necosyntax(Completor):
             except Exception:
                 _cache[self.ft] = []
 
-        token = self.input_data.split()[-1]
+        # token = base.split()[-1]
+        token = to_bytes(base, get_encoding())[self.start_column():]
+        token = to_unicode(token, 'utf-8')
         if len(token) < self.get_option('min_chars'):
             return []
         candidates = [dict(item) for item in _cache[self.ft]
-                      if item['word'].startswith(token.encode('utf-8'))]
-        logger.info(candidates)
+                      if item['abbr'].startswith(token.encode('utf-8'))]
 
-        offset = len(self.input_data) - len(token)
+        offset = len(to_bytes(base[:-len(token)], get_encoding()))
         for c in candidates:
-            c['abbr'] = c['word']
+            c['word'] = c['abbr']
             c['offset'] = offset
         return candidates
